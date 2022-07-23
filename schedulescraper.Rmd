@@ -1,0 +1,365 @@
+library(baseballr)
+
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(plyr)
+library(stringi)
+
+
+date <- Sys.Date() - 1
+
+
+
+#Rookie$teams.home.team.name
+
+
+
+MLB <- mlb_game_pks(date, level_ids = c(1))
+
+if (class(MLB)[1] == "list") {
+  MLB <- data.frame()
+} else {
+  
+  MLB <- MLB %>% filter(teams.home.team.name %in% c("Boston Red Sox", "Tampa Bay Rays", "Texas Rangers"))
+  MLB <- data.frame("MLB", MLB$teams.home.team.name)
+  names(MLB) <- c("League", "Team")
+
+}
+
+
+AAA <- mlb_game_pks(date, level_ids = c(11))
+
+if (class(AAA)[1] == "list") {
+  AAA <- data.frame()
+} else {
+  
+  AAA <- AAA %>% filter(!(teams.home.team.name %in% c("Scranton/Wilkes-Barre RailRiders", "St. Paul Saints", "Syracuse Mets", "Charlotte Knights", "Sugar Land Space Cowboys", "Gwinnett Stripers", "El Paso Chihuahuas", "Sacramento River Cats")))
+  AAA <- data.frame("AAA", AAA$teams.home.team.name)
+  names(AAA) <- c("League", "Team")
+  
+}
+
+
+AA <- mlb_game_pks(date, level_ids = c(12))
+if (class(AA)[1] == "list") {
+  AA <- data.frame()
+} else {
+    
+  AA <- AA %>% filter(!(teams.home.team.name %in% c("Mississippi Braves", "Corpus Christi Hooks", "West Michigan Whitecaps", "Asheville Tourists", "Lake County Captains", "Erie SeaWolves", "Reading Fightin Phils")))
+  AA <- data.frame("AA", AA$teams.home.team.name)
+  names(AA) <- c("League", "Team")
+
+}
+
+
+
+HighA <- mlb_game_pks(date, level_ids = c(13))
+
+if (class(HighA)[1] == "list") {
+  HighA <- data.frame()
+} else {
+  
+  HighA <- HighA %>% filter(!(teams.home.team.name %in% c("Rome Braves", 	
+  "Hudson Valley Renegades", "Brooklyn Cyclones", "West Michigan Whitecaps", "Asheville Tourists", "Lake County Captains", "Fort Wayne TinCaps")))
+  HighA <- data.frame("HighA", HighA$teams.home.team.name)
+  names(HighA) <- c("League", "Team")
+    
+}
+
+
+LowA <- mlb_game_pks(date, level_ids = c(14))
+
+if (class(LowA)[1] == "list") {
+  LowA <- data.frame()
+} else {
+    
+  LowA <- LowA %>% filter(!(teams.home.team.name %in% c("Lynchburg Hillcats", "Fort Myers Mighty Mussels", "Tampa Tarpons", "Lake Elsinore Storm", "St. Lucie Mets", "Palm Beach Cardinals", "Augusta GreenJackets")))
+  LowA <- data.frame("LowA", LowA$teams.home.team.name)
+  names(LowA) <- c("League", "Team")
+  
+}
+
+
+
+Rookie <- mlb_game_pks(date, level_ids = c(16))
+
+if (class(Rookie)[1] == "list") {
+  Rookie <- data.frame()
+} else {
+    
+  Rookie <- data.frame("Rookie", Rookie$teams.home.team.name)
+  names(Rookie) <- c("League", "Team")
+  Rookie <- Rookie %>% filter(!(Team %in% c("DSL Mets 1", "DSL Rockies", "ACL Giants Orange", "FCL Twins", "ACL Cubs", "FCL Mets")))
+  Rookie$League[grepl("DSL", Rookie$Team)] <- "DSL"
+  Rookie <- Rookie[order(Rookie$League),]
+  
+}
+
+
+
+date <- format(date, format = "%m/%d/%Y")
+
+
+
+
+cape <- read_html(paste("http://pointstreak.com/baseball/scoreboard.html?leagueid=166&seasonid=33239&date=", date, sep = ""))
+
+
+capegames <- cape %>% html_nodes("span.psbb_scorebox_teams_name") %>% html_text
+
+if(length(capegames) < 1){
+  capegames <- data.frame()
+} else {
+  
+  capegames <- gsub('[\r\n\t]', '', capegames)
+
+  capegames <- capegames[seq(2, length(capegames), 2)]
+
+  capegames <- data.frame("Cape Cod", capegames)
+names(capegames) <- c("League", "Team")
+
+}
+
+
+
+necbl <- read_html(paste("http://necblstats.wttbaseball.pointstreak.com/scoreboard.html?leagueid=204&seasonid=33205&date=", date, sep = ""))
+
+necblgames <- necbl %>% html_nodes("span.nova-scoreboard__name") %>% html_text()
+
+
+if(length(necblgames) < 1){
+  necblgames <- data.frame()
+} else {
+  
+  necblgames <- gsub('[\r\n\t]', '', necblgames)
+
+  necblgames <- necblgames[seq(2, length(necblgames), 2)]
+
+  necblgames <- data.frame("NECBL", necblgames)
+names(necblgames) <- c("League", "Team")
+
+
+}
+
+
+cpl <- read_html(paste("http://baseball.pointstreak.com/scoreboard.html?leagueid=1973&seasonid=33436&date=", date, sep = ""))
+
+cplgames <- cpl %>% html_nodes("span.nova-scoreboard__name") %>% html_text()
+
+
+if(length(cplgames) < 1) {
+  cplgames <- data.frame()
+} else {
+    
+  cplgames <- gsub('[\r\n\t]', '', cplgames)
+  
+  cplgames <- cplgames[seq(2, length(cplgames), 2)]
+  
+  cplgames <- data.frame("CPL", cplgames)
+  names(cplgames) <- c("League", "Team")
+
+}
+
+
+
+cpl2 <- read_html(paste("http://baseball.pointstreak.com/scoreboard.html?leagueid=1973&seasonid=33438&date=", date, sep = ""))
+
+cpl2games <- cpl2 %>% html_nodes("span.nova-scoreboard__name") %>% html_text()
+
+if(length(cpl2games) < 1){
+  cpl2games <- data.frame()
+} else {
+  
+  cpl2games <- gsub('[\r\n\t]', '', cpl2games)
+
+  cpl2games <- cpl2games[seq(2, length(cpl2games), 2)]
+
+  cpl2games <- data.frame("CPL", cpl2games)
+names(cpl2games) <- c("League", "Team")
+
+}
+
+cplgames <- rbind(cplgames, cpl2games)
+
+
+
+wcl <- read_html(paste("https://pointstreak.com/baseball/scoreboard.html?leagueid=145&seasonid=33339&date=", date, sep = ""))
+
+wclgames <- wcl %>% html_nodes("span.psbb_scorebox_teams_name") %>% html_text()
+
+if(length(wclgames) < 1) {
+  wclgames <- data.frame()
+} else {
+  
+  wclgames <- gsub('[\r\n\t]', '', wclgames)
+
+  wclgames <- wclgames[seq(2, length(wclgames), 2)]
+
+  wclgames <- data.frame("WCL", wclgames)
+names(wclgames) <- c("League", "Team")
+  
+}
+
+
+
+
+nwl <- read_html("https://scores24.live/en/baseball/l-northwoods-league-1")
+
+nwlgames <- nwl %>% html_nodes("div._1stYw") %>% html_text()
+
+nwlgames <- nwlgames[seq(1, length(nwlgames), 2)]
+
+nwlgames <- data.frame("NWL", nwlgames)
+names(nwlgames) <- c("League", "Team")
+
+
+nwldates <- nwl %>% html_nodes("div.sc-1lifri8-3") %>% html_text()
+
+#'[ Yesterday's date must be in and two days before must not be in
+
+nwldates <- substr(nwldates,1,2)
+
+twodays <- Sys.Date()-2
+
+if (substr(twodays, 9, 10) %in% nwldates) {
+  
+  nwlgames <- data.frame()
+  
+}
+
+
+
+
+mex <- read_html("https://scores24.live/en/baseball/l-mexico-mexican-league")
+
+mexgames <- mex %>% html_nodes("div._1stYw") %>% html_text()
+
+mexgames <- mexgames[seq(1, length(mexgames), 2)]
+
+mexgames <- data.frame("Mexico", mexgames)
+names(mexgames) <- c("League", "Team")
+
+
+mexdates <- mex %>% html_nodes("div.sc-1lifri8-3") %>% html_text()
+
+mexdates <- substr(mexdates, 1,2)
+
+if (substr(twodays, 9, 10) %in% mexdates) {
+  
+  mexdates <- data.frame()
+  
+}
+
+
+
+
+appy <- read_html("https://scores24.live/en/baseball/l-appalachian-league-60")
+
+appygames <- appy %>% html_nodes("div._1stYw") %>% html_text()
+
+appygames <- appygames[seq(1, length(appygames), 2)]
+
+appygames <- appygames[1:(length(appygames)/2)]
+
+appygames <- data.frame("Appalacian", appygames)
+names(appygames) <- c("League", "Team")
+
+appydates <- appy %>% html_nodes("div.sc-1lifri8-3") %>% html_text()
+
+appydates <- substr(appydates, 1,2)
+
+if (substr(twodays, 9, 10) %in% appydates) {
+  
+  appygames <- data.frame()
+  
+}
+
+
+
+
+npb <- read_html('https://www.oddsportal.com/baseball/japan/npb/')
+
+npbgames <- npb %>% html_nodes("td.name") %>% html_text()
+
+if(length(npbgames) < 1) {
+  npbgames <- data.frame()
+} else {
+ 
+  scores <- npb %>% html_nodes("td.center") %>% html_text()
+  
+  scores <- stri_remove_empty(scores)
+  
+  npbgames <- sapply(strsplit(npbgames, split = " -"), `[`, 1)
+  
+  npbgames <- npbgames[1:length(scores)]
+  
+  npbgames <- data.frame("NPB", npbgames)
+  names(npbgames) <- c("League", "Team")
+  
+  npbgames <- npbgames %>% filter(!(Team %in% c("Yakult Swallows", "Hiroshima Carp")))
+
+}
+
+
+
+
+
+npmdate <- format(Sys.Date(), format = "%Y%m%d")
+
+npm <- read_html(paste("https://npb.jp/bis/eng/2022/games/fgm",npmdate,".html", sep = ""))
+
+npmgames <- npm %>% html_nodes("td.contentsTeam") %>% html_text()
+
+
+if(length(npmgames) < 1){
+  npmgames <- data.frame()
+} else {
+  
+  npmgames <- npmgames[seq(1, length(npmgames), 2)]
+  
+  npmgames <- data.frame("NPM", npmgames)
+  names(npmgames) <- c("League", "Team")
+  
+  npmgames <- npmgames %>% filter(!(Team %in% c("Yakult", "Hiroshima")))
+  
+}
+
+
+
+kbo <- read_html('https://www.oddsportal.com/baseball/south-korea/kbo/')
+
+kbogames <- kbo %>% html_nodes("td.name") %>% html_text()
+
+if(length(kbogames) < 1) {
+  
+  kbogames <- data.frame()
+  
+} else {
+  
+  kbogames <- sapply(strsplit(kbogames, split = " -"), `[`, 1)
+  
+  kbogames <- data.frame("KBO", kbogames)
+  names(kbogames) <- c("League", "Team")
+  
+}
+
+
+
+#'[ Fix error when no games, put for all non-mlb/milb leagues
+
+
+
+allgames <- rbind(MLB, AAA, AA, HighA, LowA, Rookie, capegames, appygames, necblgames, wclgames, cplgames, nwlgames, mexgames, npbgames, npmgames, kbogames)
+
+allgames$date <- date
+
+allgames <- allgames %>% select(League, date, Team)
+
+allgames$date[allgames$League %in% c("NPB", "NPM", "KBO")] <- format(Sys.Date(), format = "%m/%d/%Y")
+
+
+write.csv(allgames, "cleaning schedule.csv")
+
+
